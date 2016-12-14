@@ -63,10 +63,6 @@ run_iterations = function(m, max=100, epsilon=0.00001) {
     M = as.matrix(colMeans(D, na.rm=T))
     V <- cov(D, use = "pairwise.complete.obs") + w.sum
     ml = calc_log_likelihood(D, V, M)
-    #if (ml > 0 && ml < 0.5) {
-    #  message('Stopped on iteration ',iteration, ' ML: ', ml)
-    #  break;
-    #}
     message('iteration ', iteration, ' ML: ', ml, ' Epsilon: ', eps)
   }
   ret = list()
@@ -75,9 +71,4 @@ run_iterations = function(m, max=100, epsilon=0.00001) {
   ret$V = V
   return (ret)
 }
-
-
-
-#print(results$D, digits=2)
-
 
