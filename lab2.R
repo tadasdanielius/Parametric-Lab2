@@ -23,4 +23,6 @@ print(results$D)
 
 
 # Monte-carlo
-results = simulate.run(10, 0.0000001, F)
+results = simulate.run(100, 0.9, F)
+summary(results)
+

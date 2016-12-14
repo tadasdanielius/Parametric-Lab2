@@ -47,6 +47,7 @@ simulate.run = function(n = 100, epsilon=0.00001, verbose=TRUE) {
     diff[i] = err
     message('Simulation #',i, ' Error: ', err)
   }
+  message('Total simulations ',n, ' Epsilon: ', epsilon)
   return(diff)
 }
 

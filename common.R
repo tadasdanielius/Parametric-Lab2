@@ -1,7 +1,6 @@
 impute = function(idx, V,M,D,s) {
   I = diag(dim(D)[2])
   y = t(t(D[idx, ]))
-  #S = diag(ncol(D)) * diag(V)   #I * s[idx,]
   S = I * s[idx,]
   S_star = I - S
   return(y + S_star %*% (M + V %*% S %*% ginv(S %*% V %*% S) %*% (y - S %*% M)))
