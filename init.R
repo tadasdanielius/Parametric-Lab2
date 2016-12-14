@@ -15,5 +15,5 @@ load_library = function(lib) {
   return (TRUE)
 }
 
-libs = array(c('MASS', 'lava'))
+libs = array(c('MASS', 'lava','MBESS'))
 apply(libs, 1, load_library)

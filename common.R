@@ -1,6 +1,7 @@
 impute = function(idx, V,M,D,s) {
   I = diag(dim(D)[2])
   y = t(t(D[idx, ]))
+  #S = diag(ncol(D)) * diag(V)   #I * s[idx,]
   S = I * s[idx,]
   S_star = I - S
   return(y + S_star %*% (M + V %*% S %*% ginv(S %*% V %*% S) %*% (y - S %*% M)))
@@ -32,8 +33,11 @@ calc_err_cov = function(nrows, V, s, w.sum) {
   return(w.sum)
 }
 
-run_iterations = function(m, max=100) {
+run_iterations = function(m, max=100, epsilon=0.00001) {
   D = m$D
+  D_prev = D
+  
+  
   M = m$M
   V = m$V
   s = m$s
@@ -42,22 +46,28 @@ run_iterations = function(m, max=100) {
   ncols = dim(D)[2]
   
   for (iteration in 1:max) {
-    w.sum = matrix(0, ncol = ncols, nrow = ncols)
+    w.sum = matrix(0, ncol = ncols, nrow = nrows)
     D = t(sapply(1:nrows, 
                  impute, 
                  V=V, 
                  M=M, 
                  D=m$D, 
                  s=s))
+    eps = sum(abs(D_prev-D))
+    D_prev = D
+    if (eps < epsilon) {
+      message('epsilon ',eps, ' < ', epsilon, ' Terminating.' )
+      break;
+    }
     w.sum = calc_err_cov(nrows, V, s, w.sum)
     M = as.matrix(colMeans(D, na.rm=T))
     V <- cov(D, use = "pairwise.complete.obs") + w.sum
     ml = calc_log_likelihood(D, V, M)
-    if (ml > 0 && ml < 0.5) {
-      message('Stopped on iteration ',iteration, ' ML: ', ml)
-      break;
-    }
-    message('iteration ', iteration, ' ML: ', ml)
+    #if (ml > 0 && ml < 0.5) {
+    #  message('Stopped on iteration ',iteration, ' ML: ', ml)
+    #  break;
+    #}
+    message('iteration ', iteration, ' ML: ', ml, ' Epsilon: ', eps)
   }
   ret = list()
   ret$D = D
@@ -65,3 +75,9 @@ run_iterations = function(m, max=100) {
   ret$V = V
   return (ret)
 }
+
+
+
+#print(results$D, digits=2)
+
+
