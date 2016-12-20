@@ -7,11 +7,10 @@ load_library = function(lib) {
   if (!lib %in% installed.packages()) {
     message('Package ', lib, ' is not installed. Installing')
     install.packages(lib)
-  } else {
-    library(package = lib,
-            character.only = TRUE,
-            quietly = TRUE)
   }
+  library(package = lib,
+          character.only = TRUE,
+          quietly = TRUE)
   return (TRUE)
 }
 

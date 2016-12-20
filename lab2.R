@@ -24,5 +24,5 @@ print(results$D)
 
 # Monte-carlo
 results = simulate.run(100, 0.9, F)
-summary(results)
+summary(results$diff)
 

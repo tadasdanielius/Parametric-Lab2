@@ -30,7 +30,9 @@ simulate.nullify = function(data.matrix, p=0.5) {
 }
 
 simulate.run = function(n = 100, epsilon=0.00001, verbose=TRUE) {
+  max = 5000
   diff = rep(0,n)
+  total_err = matrix(0, nrow=max, ncol=1)
   for (i in 1:n) {
     dat = simulate.data()
     res = simulate.nullify(dat)
@@ -38,17 +40,21 @@ simulate.run = function(n = 100, epsilon=0.00001, verbose=TRUE) {
     
     results = NULL
     if (verbose) {
-      results = run_iterations(m, max=5000, epsilon = epsilon)
+      results = run_iterations(m, max=max, epsilon = epsilon)
     }
     else {
-      results = suppressMessages(run_iterations(m, max=5000, epsilon = epsilon))
+      results = suppressMessages(run_iterations(m, max=max, epsilon = epsilon))
     }
+    total_err = total_err + results$err
     err = mean(abs(dat[res$missing==1] - results$D[res$missing==1]))
     diff[i] = err
     message('Simulation #',i, ' Error: ', err)
   }
+  ret = list()
+  ret$diff = diff
+  ret$err = total_err
   message('Total simulations ',n, ' Epsilon: ', epsilon)
-  return(diff)
+  return(ret)
 }
 
 

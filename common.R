@@ -43,7 +43,7 @@ run_iterations = function(m, max=100, epsilon=0.00001) {
   
   nrows = dim(D)[1]
   ncols = dim(D)[2]
-  
+  ets_err = matrix(0, ncol=1, nrow=max)
   for (iteration in 1:max) {
     w.sum = matrix(0, ncol = ncols, nrow = nrows)
     D = t(sapply(1:nrows, 
@@ -53,6 +53,7 @@ run_iterations = function(m, max=100, epsilon=0.00001) {
                  D=m$D, 
                  s=s))
     eps = sum(abs(D_prev-D))
+    ets_err[iteration,] = eps
     D_prev = D
     if (eps < epsilon) {
       message('epsilon ',eps, ' < ', epsilon, ' Terminating.' )
@@ -64,10 +65,12 @@ run_iterations = function(m, max=100, epsilon=0.00001) {
     ml = calc_log_likelihood(D, V, M)
     message('iteration ', iteration, ' ML: ', ml, ' Epsilon: ', eps)
   }
+  
   ret = list()
   ret$D = D
   ret$M = M
   ret$V = V
+  ret$err = ets_err
   return (ret)
 }
 
