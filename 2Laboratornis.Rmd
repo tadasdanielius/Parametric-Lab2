@@ -1,0 +1,174 @@
+---
+title: "2 Laboratorinis Darbas (EM)"
+author: "Tadas Danielius"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+source('init.R')
+source('data.R')
+source('common.R')
+source('simulation.R')
+
+
+# A dalis
+n=100
+matrices = load_data()
+```
+
+## 1 Dalis
+
+Turime kintamųjų x,y,z duomenis D su praleistomis reikšmėmis.
+
+```{r}
+matrices$D
+```
+
+#### (a) Kai duomenys nekoreliuoti
+
+Kadangi duomenys yra nekoreliuoti ir turi Gauso skirstinį, tai pritaikome EM algoritmą (užpildome empyrinemiais vidurkiais) ir gauname rezultatus:
+
+```{r}
+t(sapply(1:dim(matrices$D)[1], 
+                    impute, 
+                    V=matrices$V_diag, 
+                    M=matrices$M, 
+                    D=matrices$D, 
+                    s=matrices$s))
+```
+
+
+#### (b) Kai duomenys koreliuoti
+
+Atliekame 1-ą EM iteraciją
+
+```{r}
+m = load_data()
+run_iterations(m, max=1, epsilon = 0.001)$D
+```
+
+Atliekame 2-ą EM iteraciją
+
+```{r}
+m = load_data()
+run_iterations(m, max=2, epsilon = 0.001)$D
+```
+
+Atliekame 3-ą EM iteraciją
+
+```{r}
+m = load_data()
+run_iterations(m, max=3, epsilon = 0.001)$D
+```
+
+Skaičiuojame tol, kol didžiausio tikėtinumo skirtumas taps mažesnis nei 0.001
+
+```{r}
+m = load_data()
+res1 = run_iterations(m, max=1000, epsilon = 0.001, ml.cap=10)
+res1$D
+```
+
+Reikėjo atlikti 372 iteracijas kol log-likelihood reikšmė tapo mažesnė už 0.001
+
+### (3) Simuliacija
+
+#### Nekoreliuotos reikšmės
+
+Atliekame simuliaciją `r n` kartų kai (x,y,z) komponentės yra tarpusavyje **nekoreliuotos**
+
+```{r}
+results = simulate.run(n, 0.001, F, correlated = FALSE)
+message('MAPE Rezultatai')
+summary(results$mape)
+message('Vidutinis skirtumas tarp tikrųjų ir įvertintų reikšmių')
+summary(results$errors)
+```
+
+```{r echo=FALSE}
+par(mfrow=c(1,2))
+plot(results$mape,type='l', ann=F)
+title(xlab='Iteracijos')
+title(ylab='Mean Absolute % error (MAPE)')
+
+plot(results$errors,type='l', ann=F)
+title(xlab='Iteracijos')
+title(ylab='Vidutinis skirtumas tarp realių ir užpildytų')
+```
+
+#### Koreliuotos reikšmės
+
+Atliekame simuliaciją `r n` kartų kai (x,y,z) komponentės yra tarpusavyje koreliuotos
+
+```{r cache=TRUE}
+res_corr = simulate.run(n, 0.001, F, correlated = T)
+message('MAPE Rezultatai')
+summary(res_corr$mape)
+
+message('Vidutinis skirtumas tarp tikrųjų ir įvertintų reikšmių')
+summary(res_corr$errors)
+```
+
+```{r echo=F}
+par(mfrow=c(1,2))
+plot(res_corr$mape, type='l', ann=F)
+title(xlab='Iteracijos')
+title(ylab='Mean Absolute % error (MAPE)')
+
+plot(res_corr$errors, type='l', ann=F)
+title(xlab='Iteracijos')
+title(ylab='Vidutinis skirtumas tarp realių ir užpildytų')
+
+```
+
+### Bendras grafikas
+
+```{r echo=F}
+par(mfrow=c(1,2))
+g_range <- range(0, results$errors, res_corr$errors)
+plot(results$errors,type='l', col='red', ylim=g_range, ann=F)
+lines(res_corr$errors, col='blue')
+lines(rep(mean(res_corr$errors), length(res_corr$errors)), type="l", pch=22, lty=4, col="blue")
+lines(rep(mean(results$errors), length(results$errors)), type="l", pch=22, lty=4, col="red")
+legend(1, max(results$errors), c("Uncorrelated","Correlated"), cex=0.8, col=c("red","blue"), pch=22)
+title(xlab='Iteracijos')
+title(ylab='Vidutinis skirtumas tarp realių ir užpildytų')
+
+
+g_range <- range(0, results$mape, res_corr$mape)
+plot(results$mape,type='l', col='red', ann=F)
+lines(res_corr$mape, col='blue')
+lines(rep(mean(res_corr$mape), length(res_corr$mape)), type="l", pch=22, lty=4, col="blue")
+lines(rep(mean(results$mape), length(results$mape)), type="l", pch=22, lty=4, col="red")
+legend(1, max(results$mape), c("Uncorrelated","Correlated"), cex=0.7, col=c("red","blue"), pch=22)
+title(xlab='Iteracijos')
+title(ylab='Mean Absolute % error (MAPE)')
+```
+
+Akivaizdu, kai duomenys koreliuoti rezultatai kur kas geresni. Koreliuotų duomenų MAPE reikšmė yra `r mean(res_corr$mape)` o nekoreliuotų `r mean(results$mape)`. 
+
+### Didžiausio tikėtinumo vertinimas
+
+Kadangi naudojant EM algoritmą maksimizuojam log-likelihood funkciją, tai rezultatai jau yra sukonvergavusios reikšmės.
+
+Kai reikšmės nekoreliuotos
+
+```{r}
+summary(results$ml)
+```
+
+Ir kai reikšmės koreliuotos
+
+```{r}
+summary(res_corr$ml)
+```
+
+Galime grafiškai pavaizduoti kaip kito log-likelihood reikšmė atliekant pirmą užduotį
+
+```{r}
+plot(res1$ml, type='l')
+```
+
+```{r}
+summary(res1$ml)
+```
