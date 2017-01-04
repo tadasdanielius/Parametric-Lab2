@@ -55,7 +55,7 @@ run_iterations = function(m,
   
   nrows = dim(D)[1]
   ncols = dim(D)[2]
-  ets_err = matrix(0, ncol=1, nrow=max)
+  
   ml.prev = calc_log_likelihood(D, V, M)
   if (is.nan(ml.prev)) {
     warning('ml.prev is NaN')
@@ -86,7 +86,6 @@ run_iterations = function(m,
       D = m$D,
       s = s
     ))
-    ets_err[iteration,] = eps
     D_prev = D
     w.sum = calc_err_cov(nrows, V, s, w.sum)
     M = as.matrix(colMeans(D, na.rm = T))
@@ -106,12 +105,12 @@ run_iterations = function(m,
 
     iteration = iteration + 1
 }
-  
+message(' iteration ', iteration - 1, ' ML: ', ml.abs)
 ret = list()
 ret$D = D
 ret$M = M
 ret$V = V
-  ret$err = ets_err
+ret$ml.all = ml.all
 
 return (ret)
 }

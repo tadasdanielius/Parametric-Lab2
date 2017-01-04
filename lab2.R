@@ -26,7 +26,7 @@ print(results$D)
 
 # Monte-carlo
 n = 100
-summary(results$diff)
+results = simulate.run(n, 0.001, F, correlated = FALSE)
 summary(results$errors)
 summary(results$mape)
 plot(results$mape,type='l')

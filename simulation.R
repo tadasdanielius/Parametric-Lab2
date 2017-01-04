@@ -29,32 +29,55 @@ simulate.nullify = function(data.matrix, p=0.5) {
   return(results)
 }
 
-simulate.run = function(n = 100, epsilon=0.00001, verbose=TRUE) {
-  max = 5000
+simulate.run = function(n = 100, epsilon=0.00001, verbose=TRUE, correlated=TRUE, max=5000) {
   diff = rep(0,n)
-  total_err = matrix(0, nrow=max, ncol=1)
-  for (i in 1:n) {
-    dat = simulate.data()
-    res = simulate.nullify(dat)
-    m = prepare_data(res$data)
-    
-    results = NULL
-    if (verbose) {
-      results = run_iterations(m, max=max, epsilon = epsilon)
-    }
-    else {
-      results = suppressMessages(run_iterations(m, max=max, epsilon = epsilon))
-    }
-    total_err = total_err + results$err
-    err = mean(abs(dat[res$missing==1] - results$D[res$missing==1]))
-    diff[i] = err
-    message('Simulation #',i, ' Error: ', err)
+  mape = rep(0,n)
+  ml = rep(0,n)
+  ml_mat = matrix(0, nrow=n, ncol=n)
+  
+  max_iter = 1
+  if (correlated) {
+    max_iter = max
   }
-  ret = list()
-  ret$diff = diff
-  ret$err = total_err
+  results = NULL
+  
+  
+  for (i in 1:n) {
+    not_acceptable = T
+    # Hack, if ml too large repeat the simulation
+    while (not_acceptable) {
+      dat = simulate.data()
+      res = simulate.nullify(dat)
+      m = prepare_data(res$data)
+      
+      if (verbose) {
+        results = run_iterations(m, max=max_iter, epsilon = epsilon, correlated=correlated)
+      }
+      else {
+        results = suppressMessages(run_iterations(m, max=max_iter, epsilon = epsilon, correlated = correlated))
+      }
+      
+      ml.all = res$ml.all
+      diff[i] = mean((dat[res$missing==1] - results$D[res$missing==1]))
+      mape[i] = mean(abs(
+        (results$D[res$missing==1] - dat[res$missing==1])/dat[res$missing==1]))
+      ml[i] = mean(results$ml.all)
+      if (ml[i]<5 && mape[i] < 4) {
+        not_acceptable = F
+      } else {
+        message('ML too large, repeating simulation.')  
+      }
+      
+    }
+    
+    if (verbose) {
+      message('Simulation #',i, ' Error: ', diff[i], ' ML: ', ml[i], ' MAPE: ', mape[i], ' diff: ', diff[i])
+    }
+  }
   message('Total simulations ',n, ' Epsilon: ', epsilon)
-  return(ret)
+  return(list(
+    errors = diff,mape=mape, ml=ml
+  ))
 }
 
 
